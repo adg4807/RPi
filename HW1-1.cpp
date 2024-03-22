@@ -1,41 +1,37 @@
-/** Simple Sysfs LED control program - written by Derek Molloy
-*    simple OOP  struture for the Exploring Raspberry Pi
-*
-*    This program can be used to easliy control multiple LEDS using a class.
-*    This program uses C++11 for the to_string() function and therefore must
-*    be compiled with the -std=c++11 flag.
+/*
+Code source and modifications
+● https://github.com/derekmolloy/exploringrpi.git
 */
-
 #include<iostream>
 #include<fstream>
 #include<string>
-#include<unistd.h>         // for the microsecond sleep function
+#include<unistd.h>         
 using namespace std;
 #define GPIO         "/sys/class/gpio/"
-#define FLASH_DELAY  50000*1000 // 50 milliseconds
+#define FLASH_DELAY  1000000
 
 class LED {
-private:                // the following is part of the implementation
-    string gpioPath;     // private states
+private:               
+    string gpioPath;     
     int    gpioNumber;
     void writeSysfs(string path, string filename, string value);
-public:                 // part of the public interface
-    LED(int gpioNumber); // the constructor -- create the object
+public:                 
+    LED(int gpioNumber); 
     virtual void turnOn();
     virtual void turnOff();
     virtual void displayState();
-    virtual ~LED();      // the destructor -- called automatically
+    virtual ~LED();     
 };
 
-LED::LED(int gpioNumber) {  // constructor implementation
+LED::LED(int gpioNumber) { 
     this->gpioNumber = gpioNumber;
     gpioPath = string(GPIO "gpio") + to_string(gpioNumber) + string("/");
     writeSysfs(string(GPIO), "export", to_string(gpioNumber));
-    usleep(100000);         // ensure GPIO is exported
+    usleep(100000);        
     writeSysfs(gpioPath, "direction", "out");
 }
 
-// This implementation function is "hidden" outside of the class
+
 void LED::writeSysfs(string path, string filename, string value) {
     ofstream fs;
     fs.open((path + filename).c_str());
@@ -60,31 +56,31 @@ void LED::displayState() {
     fs.close();
 }
 
-LED::~LED() {  // The destructor unexports the sysfs GPIO entries
+LED::~LED() {  
     cout << "Destroying the LED with GPIO number " << gpioNumber << endl;
     writeSysfs(string(GPIO), "unexport", to_string(gpioNumber));
 }
 
-int main(int argc, char* argv[]) {  // the main function start point
+int main(int argc, char* argv[]) {  
     cout << "Starting the makeLEDs program" << endl;
-    LED led1(4), led2(17) ,led3(27);          // create two LED objects
+    LED led1(4), led2(17) ,led3(27);          
     cout << "Flashing the LEDs for 5 seconds" << endl;
-    for (; ; ) {        // LEDs will alternate
-        led1.turnOn();               // turn GPIO4 on
-        led2.turnOff();              // turn GPIO17 off
+    for ( ; ; ) {        
+        led1.turnOn();               
+        led2.turnOff();              
         led3.turnOff();
-        usleep(FLASH_DELAY);         // sleep for 50ms
-        led1.turnOff();              // turn GPIO4 off
-        led2.turnOn();               // turn GPIO17 on
+        usleep(FLASH_DELAY);        
+        led1.turnOff();              
+        led2.turnOn();               
         led3.turnOff();
         usleep(FLASH_DELAY);
-        led1.turnOff();              // turn GPIO4 off
-        led2.turnOff();               // turn GPIO17 on
+        led1.turnOff();              
+        led2.turnOff();               
         led3.turnOn();
-        usleep(FLASH_DELAY);// sleep for 50ms
+        usleep(FLASH_DELAY);
     }
-    led1.displayState();            // display final GPIO4 state
-    led2.displayState();            // display final GPIO17 state
+    led1.displayState();            
+    led2.displayState();            
     led3.displayState();
     cout << "Finished the makeLEDs program" << endl;
     return 0;
