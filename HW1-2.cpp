@@ -1,8 +1,7 @@
 /*
 Code source and modifications
-�� https://github.com/derekmolloy/exploringrpi.git
+¡Ü https://github.com/derekmolloy/exploringrpi.git
 */
-
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -11,7 +10,7 @@ Code source and modifications
 using namespace std;
 
 #define GPIO         "/sys/class/gpio/"
-#define FLASH_DELAY  1000000
+#define FLASH_DELAY  1000000 // 1초
 
 class LED {
 private:
@@ -20,11 +19,12 @@ private:
     void writeSysfs(string path, string filename, string value);
 
 public:
+    //bool isOn; // LED 상태
     LED(int gpioNumber);
-    virtual void turnOn();
-    virtual void turnOff();
-    virtual void displayState();
-    virtual ~LED();
+    void turnOn();
+    void turnOff();
+    void displayState();
+    ~LED();
 };
 
 LED::LED(int gpioNumber) {
@@ -33,6 +33,7 @@ LED::LED(int gpioNumber) {
     writeSysfs(string(GPIO), "export", to_string(gpioNumber));
     usleep(100000);
     writeSysfs(gpioPath, "direction", "out");
+    //isOn = false; // 초기 LED 상태: 꺼짐
 }
 
 void LED::writeSysfs(string path, string filename, string value) {
@@ -44,10 +45,12 @@ void LED::writeSysfs(string path, string filename, string value) {
 
 void LED::turnOn() {
     writeSysfs(gpioPath, "value", "1");
+    //isOn = true; // LED가 켜진 상태로 업데이트
 }
 
 void LED::turnOff() {
     writeSysfs(gpioPath, "value", "0");
+    //isOn = false; // LED가 꺼진 상태로 업데이트
 }
 
 void LED::displayState() {
@@ -65,31 +68,40 @@ LED::~LED() {
 }
 
 int main(int argc, char* argv[]) {
-    cout << "Starting the makeLEDs program" << endl;
-    LED leds[] = { LED(4), LED(17), LED(27) };
+    cout << "Starting the LED blinking program" << endl;
+    LED leds[] = {LED(4), LED(17), LED(27)};
     int num_leds = sizeof(leds) / sizeof(leds[0]);
-    cout << "Flashing the LEDs for 5 seconds" << endl;
+    cout << "Blinking the LEDs" << endl;
+    
+    bool forward = true; // 순방향으로 시작
+    int currentLED = 0; // 현재 켜진 LED의 위치
 
-    int iterations = 5; 
-    while (iterations--) {
-        for (int i = 0; i < num_leds; ++i) {
-            leds[i].turnOn();
-            usleep(FLASH_DELAY);
-            leds[i].turnOff();
-            usleep(FLASH_DELAY);
+    while(true) {
+        // 현재 LED를 켜고 다음 LED로 이동
+        leds[currentLED].turnOn();
+        usleep(FLASH_DELAY);
+        leds[currentLED].turnOff();
+
+        // 순방향일 때
+        if (forward) {
+            currentLED++; // 다음 LED로 이동
+            // 마지막 LED일 경우
+            if (currentLED == num_leds) {
+                forward = false; // 방향을 반대로 변경
+                currentLED = num_leds - 2; // 다음에 켜질 LED는 뒤에서 두 번째
+            }
         }
-        for (int i = num_leds - 2; i > 0; --i) {
-            leds[i].turnOn();
-            usleep(FLASH_DELAY);
-            leds[i].turnOff();
-            usleep(FLASH_DELAY);
+        // 역방향일 때
+        else {
+            currentLED--; // 이전 LED로 이동
+            // 첫 번째 LED일 경우
+            if (currentLED < 0) {
+                forward = true; // 방향을 순방향으로 변경
+                currentLED = 1; // 다음에 켜질 LED는 두 번째
+            }
         }
     }
 
-    for (int i = 0; i < num_leds; ++i) {
-        leds[i].displayState();
-    }
-
-    cout << "Finished the makeLEDs program" << endl;
+    cout << "Finished the LED blinking program" << endl;
     return 0;
 }
