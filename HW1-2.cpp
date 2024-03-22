@@ -19,7 +19,6 @@ private:
     void writeSysfs(string path, string filename, string value);
 
 public:
-    //bool isOn; // LED 상태
     LED(int gpioNumber);
     void turnOn();
     void turnOff();
@@ -33,7 +32,6 @@ LED::LED(int gpioNumber) {
     writeSysfs(string(GPIO), "export", to_string(gpioNumber));
     usleep(100000);
     writeSysfs(gpioPath, "direction", "out");
-    //isOn = false; // 초기 LED 상태: 꺼짐
 }
 
 void LED::writeSysfs(string path, string filename, string value) {
@@ -45,12 +43,10 @@ void LED::writeSysfs(string path, string filename, string value) {
 
 void LED::turnOn() {
     writeSysfs(gpioPath, "value", "1");
-    //isOn = true; // LED가 켜진 상태로 업데이트
 }
 
 void LED::turnOff() {
     writeSysfs(gpioPath, "value", "0");
-    //isOn = false; // LED가 꺼진 상태로 업데이트
 }
 
 void LED::displayState() {
